@@ -1,3 +1,4 @@
+"use strict";
 // JavaScript Document
 
 // ********************
@@ -6,8 +7,7 @@
 
 var studentsRO = $('.student-list').clone();
 var paginationDiv = $('<div class="pagination"><ul></ul></div>');
-var activeStudents = studentsRO.clone();
-var studentList = activeStudents.find('li');
+var studentList = $('.student-list').find('li');
 var studentCount = studentList.length;
 var studentsPerPage = 10;
 
@@ -22,28 +22,25 @@ var studentsPerPage = 10;
 // Adds event handler for list elements (page) click processing
 var setupPagination = function (studentCount) {
 	var pageCount = Math.ceil(studentCount / studentsPerPage);
-	var paginationList = paginationDiv.find("ul");
-    paginationDiv.find('ul li').remove();
-	if (pageCount > 1)
-	{
-	for (var i = 1; i <= pageCount; i++) {
-		var listItem;
-		if (i === 1) {
-			listItem = $("<li><a class='active' href='#'>" + i + "</a></li>");
-		} else {
-			listItem = $("<li><a href='#'>" + i + "</a></li>");
+	paginationDiv.find('ul li').remove();
+	if (pageCount > 1) {
+		for (var i = 1; i <= pageCount; i++) {
+			var listItem = $("<li><a href='#'>" + i + "</a></li>");
+			if (i === 1) {
+				listItem = $("<li><a class='active' href='#'>" + i + "</a></li>");
+			}
+			listItem.on("click", {pageIdx: i}, processPageClick);
+			paginationDiv.find("ul").append(listItem);
 		}
-		listItem.on("click", {
-			pageIdx: i
-		}, function (e) {
-			e.preventDefault();
-			showStudents(e.data.pageIdx);
-			$('.pagination li a').removeClass('active');
-			$(this).find('a').addClass('active');
-		});
-		paginationList.append(listItem);
-	}}
+	}
 };
+
+var processPageClick = function (e) {
+				e.preventDefault();
+				showStudents(e.data.pageIdx);
+				$('.pagination li a').removeClass('active');
+				$(this).find('a').addClass('active');
+			};
 
 // Show students
 var showStudents = function (pageIdx) {
@@ -57,42 +54,28 @@ var showStudents = function (pageIdx) {
 };
 
 // Search
-var search = function() {
-  var replacementContent = studentsRO.clone().find('li');
-  var filteredStudentContainer = studentsRO.clone();
-  var filteredStudents = filteredStudentContainer.find('li');
-  var criteria =  $('.student-search input').val().trim();
-  if (criteria.length > 0)
-  {
-   var names = studentsRO.find('h3');
-   var emails = studentsRO.find('span.email');
-   studentsRO.find('li').each(function(idx){
-	 var name = names.eq(idx).text();
-	 var email = emails.eq(idx).text();
-	 if (name.indexOf(criteria) === -1 && email.indexOf(criteria) === -1)
-	 {
-       filteredStudents.eq(idx).addClass('remove');
-	 }
-   }); 
-
-   filteredStudentContainer.find('li.remove').remove();
-   if (filteredStudentContainer.find('li').length === 0)
-   {
-	   replacementContent = $('<div id="noresults">No students found that match your criteria.</div>');   
-   }
-   else {
-	   replacementContent = filteredStudentContainer.find('li');
-   }
-  }
+var search = function () {
+	var replacementContent = studentsRO.clone().find('li');
+	var filteredStudentContainer = studentsRO.clone();
+	var criteria = $('.student-search input').val().trim();
+	if (criteria.length > 0) {
+		filteredStudentContainer.find('h3:contains("' + criteria + '"),span.email:contains("' + criteria + '")').parent().parent().addClass('keep');
+		filteredStudentContainer.find('li:not(li.keep)').remove();
+		if (filteredStudentContainer.find('li').length === 0) {
+			replacementContent = $('<div id="noresults">No students found that match your criteria.</div>');
+		} else {
+			replacementContent = filteredStudentContainer.find('li');
+		}
+	}
 	setupPagination(replacementContent.length);
 	$('.student-list').empty();
 	$('.student-list').append(replacementContent);
 
-  showStudents(1);
+	showStudents(1);
 };
 
 // Setup Search Area
-var setupSearch = function(){
+var setupSearch = function () {
 	var searchDiv = $('<div class="student-search"><input placeholder="Search for students..."><button>Search</button></div>');
 	searchDiv.find("button").on("click", search);
 	$('.page-header').append(searchDiv);
